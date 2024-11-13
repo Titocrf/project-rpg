@@ -2,46 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Guild;
+use App\Http\Resources\GuildResource;
+use App\Services\GuildService;
 use Illuminate\Http\Request;
 
 class GuildController extends Controller
 {
+    protected $guildService;
+
+    public function __construct(GuildService $guildService)
+    {
+        $this->guildService = $guildService;
+    }
+
     public function index()
     {
-        // Retorna todas as guildas
-        return response()->json(Guild::all());
+        $dados = $this->guildService->getAll();
+        return response()->json(GuildResource::collection($dados));
     }
 
     public function store(Request $request)
     {
-        // Cria uma nova guilda
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
+            'class_id' => 'required|exists:classes,id',
+            'xp' => 'required|integer|min:1|max:100',
         ]);
 
-        $guild = Guild::create($request->all());
-        return response()->json($guild, 201);
+        $dados = $this->guildService->create($data);
+        return response()->json(new GuildResource($dados));
     }
 
     public function show($id)
     {
-        // Exibe detalhes de uma guilda específica
-        return response()->json(Guild::findOrFail($id));
+        $dados = $this->guildService->getById($id);
+        return response()->json(new GuildResource($dados));
     }
 
     public function update(Request $request, $id)
     {
-        // Atualiza informações de uma guilda
-        $guild = Guild::findOrFail($id);
-        $guild->update($request->all());
-        return response()->json($guild);
+        $data = $request->all();
+        $dados = $this->guildService->update($id, $data);
+        return response()->json(new GuildResource($dados));
     }
 
     public function destroy($id)
     {
-        // Deleta uma guilda
-        Guild::destroy($id);
+        $this->guildService->delete($id);
         return response()->json(null, 204);
     }
 }

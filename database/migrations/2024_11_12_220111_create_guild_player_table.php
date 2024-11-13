@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('guild_id')->constrained();
             $table->foreignId('player_id')->constrained();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

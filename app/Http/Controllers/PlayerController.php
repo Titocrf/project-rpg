@@ -2,48 +2,65 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Player;
+use App\Http\Resources\PlayerResource;
+use App\Services\PlayerService;
 use Illuminate\Http\Request;
 
 class PlayerController extends Controller
 {
+    protected $playerService;
+
+    public function __construct(PlayerService $playerService)
+    {
+        $this->playerService = $playerService;
+    }
+
     public function index()
     {
-        // Retorna todos os jogadores
-        return response()->json(Player::all());
+        $dados = $this->playerService->getAll();
+        return response()->json(PlayerResource::collection($dados));
     }
 
     public function store(Request $request)
     {
-        // Valida e cria um novo jogador
-        $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'class_id' => 'required|exists:classes,id',
             'xp' => 'required|integer|min:1|max:100',
         ]);
 
-        $player = Player::create($request->all());
-        return response()->json($player, 201);
+        $dados = $this->playerService->create($data);
+        return response()->json(new PlayerResource($dados));
     }
 
     public function show($id)
     {
-        // Retorna detalhes de um jogador específico
-        return response()->json(Player::findOrFail($id));
+        $dados = $this->playerService->getById($id);
+        return response()->json(new PlayerResource($dados));
     }
 
     public function update(Request $request, $id)
     {
-        // Atualiza as informações de um jogador
-        $player = Player::findOrFail($id);
-        $player->update($request->all());
-        return response()->json($player);
+        $data = $request->all();
+        $dados = $this->playerService->update($id, $data);
+        return response()->json(new PlayerResource($dados));
+    }
+
+    public function confirm($id)
+    {
+        $dados = $this->playerService->confirmPlayer($id, true);
+        return response()->json(new PlayerResource($dados));
+    }
+
+    public function unconfirm($id)
+    {
+        $dados = $this->playerService->confirmPlayer($id, false);
+        return response()->json(new PlayerResource($dados));
     }
 
     public function destroy($id)
     {
-        // Deleta um jogador
-        Player::destroy($id);
+        $this->playerService->delete($id);
         return response()->json(null, 204);
     }
 }

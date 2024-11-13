@@ -15,6 +15,6 @@ class Guild extends Model
 
     public function players()
     {
-        return $this->belongsToMany(Player::class);
+        return $this->belongsToMany(Player::class, 'guild_player', 'guild_id', 'player_id')->distinct();
     }
 }
